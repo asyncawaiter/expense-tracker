@@ -1,6 +1,6 @@
 # Expense Tracker
 
-A beautiful, Apple-inspired expense tracker built with Next.js 14, Tailwind CSS, and shadcn/ui. Uses the 50/30/20 budgeting rule (Fixed/Fun/Future You).
+A beautiful expense tracker built with Next.js 14, Tailwind CSS, and shadcn/ui. Uses the 50/30/20 budgeting rule (Fixed/Fun/Future You).
 
 ## Features
 
