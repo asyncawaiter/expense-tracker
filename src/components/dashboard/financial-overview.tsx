@@ -84,12 +84,12 @@ export function FinancialOverview({
     manual: 'Manual Entry',
   };
 
-  const SOURCE_COLORS: Record<SourceFile, { bg: string; text: string; dot: string }> = {
-    amex: { bg: 'bg-blue-500', text: 'text-blue-600', dot: 'bg-blue-500' },
-    pc: { bg: 'bg-orange-500', text: 'text-orange-600', dot: 'bg-orange-500' },
-    scotia_chequing: { bg: 'bg-red-500', text: 'text-red-600', dot: 'bg-red-500' },
-    scotia_visa: { bg: 'bg-teal-500', text: 'text-teal-600', dot: 'bg-teal-500' },
-    manual: { bg: 'bg-slate-500', text: 'text-slate-600', dot: 'bg-slate-500' },
+  const SOURCE_COLORS: Record<SourceFile, { bg: string; text: string; dot: string; border: string }> = {
+    amex: { bg: 'bg-blue-500', text: 'text-blue-600', dot: 'bg-blue-500', border: 'border-blue-200' },
+    pc: { bg: 'bg-orange-500', text: 'text-orange-600', dot: 'bg-orange-500', border: 'border-orange-200' },
+    scotia_chequing: { bg: 'bg-red-500', text: 'text-red-600', dot: 'bg-red-500', border: 'border-red-200' },
+    scotia_visa: { bg: 'bg-teal-500', text: 'text-teal-600', dot: 'bg-teal-500', border: 'border-teal-200' },
+    manual: { bg: 'bg-slate-500', text: 'text-slate-600', dot: 'bg-slate-500', border: 'border-slate-200' },
   };
 
   // Get color for pie chart cells
