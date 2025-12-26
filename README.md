@@ -1,6 +1,6 @@
 # Expense Tracker
 
-A beautiful expense tracker built with Next.js 16, Tailwind CSS 4, and shadcn/ui. Uses the 50/30/20 budgeting rule (Fixed/Fun/Future You).
+A beautiful expense tracker built with Next.js 16.1, Tailwind CSS 4, and shadcn/ui. Uses the 50/30/20 budgeting rule (Fixed/Fun/Future You).
 
 ## Features
 
@@ -17,7 +17,7 @@ A beautiful expense tracker built with Next.js 16, Tailwind CSS 4, and shadcn/ui
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui
+- **Frontend**: Next.js 16.1 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui
 - **Database**: Supabase (PostgreSQL)
 - **Excel/CSV Parsing**: SheetJS (xlsx) - 100% client-side
 - **Charts**: Recharts
@@ -29,7 +29,7 @@ All processing is done client-side - no server-side compute needed!
 
 ```
 ┌─────────────────────────────────────────┐     ┌─────────────────┐
-│  Next.js 16 (Static on Vercel CDN)      │────▶│  Supabase       │
+│  Next.js 16.1 (Static on Vercel CDN)    │────▶│  Supabase       │
 │  + Client-side Excel/CSV parsing        │     │  PostgreSQL     │
 │  + Supabase JS Client (browser → DB)    │     │  (FREE tier)    │
 └─────────────────────────────────────────┘     └─────────────────┘
