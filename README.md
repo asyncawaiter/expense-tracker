@@ -43,7 +43,8 @@ All processing is done client-side - no server-side compute needed!
 ### 1. Clone and Install
 
 ```bash
-cd expense-tracker-v2
+git clone https://github.com/asyncawaiter/expense-tracker.git
+cd expense-tracker
 npm install
 ```
 
@@ -55,7 +56,13 @@ npm install
 
 ### 3. Configure Environment
 
-Create a `.env.local` file:
+Copy the example environment file and fill in your Supabase credentials:
+
+```bash
+cp .env.example .env.local
+```
+
+Then edit `.env.local` with your values:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
