@@ -52,9 +52,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  MoreHorizontal, 
-  Archive, 
-  Trash2, 
+  MoreHorizontal,
+  Archive,
+  Trash2,
   Receipt,
   TrendingDown,
   ChevronDown,
@@ -69,6 +69,7 @@ import {
   ArrowUpDown,
   FolderOpen,
   Search,
+  Calendar,
 } from 'lucide-react';
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'description-asc' | 'description-desc';
@@ -111,7 +112,7 @@ interface ExpandedRowProps {
   isLoading: boolean;
   categories: Category[];
   onSaveNote: (note: string) => Promise<void>;
-  onSaveEdit: (description: string, amount: number) => Promise<void>;
+  onSaveEdit: (description: string, amount: number, date: string) => Promise<void>;
   onSaveCategory: (type: CategoryType, categoryId: string | null) => Promise<void>;
 }
 
@@ -123,6 +124,7 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [editDescription, setEditDescription] = useState(transaction.description);
   const [editAmount, setEditAmount] = useState(String(Math.abs(transaction.amount)));
+  const [editDate, setEditDate] = useState(transaction.date);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [selectedType, setSelectedType] = useState<CategoryType | null>(transaction.major_category_type);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(transaction.category_id);
@@ -140,7 +142,7 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
       return;
     }
     const signedAmount = transaction.amount < 0 ? -amount : amount;
-    await onSaveEdit(editDescription, signedAmount);
+    await onSaveEdit(editDescription, signedAmount, editDate);
     setIsEditingDetails(false);
   };
 
@@ -149,6 +151,7 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
       case 'description': return 'Title';
       case 'amount': return 'Amount';
       case 'notes': return 'Note';
+      case 'date': return 'Date';
       default: return name;
     }
   };
@@ -161,17 +164,20 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
         currency: 'CAD',
       }).format(Math.abs(parseFloat(value)));
     }
+    if (fieldName === 'date') {
+      return format(new Date(value), 'MMM d, yyyy');
+    }
     return value;
   };
 
   return (
-    <div className="bg-muted/30 px-6 py-4 border-t">
+    <div className="bg-muted/20 px-6 py-5 border-t border-border/50">
       <div className="grid grid-cols-2 gap-6">
         {/* Left: Notes & Edit */}
         <div className="space-y-4">
-          {/* Edit Description/Amount */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
+          {/* Edit Description/Amount/Date */}
+          <div className="bg-background rounded-lg border border-border/60 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b border-border/40">
               <h4 className="text-sm font-medium flex items-center gap-2">
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                 Edit Transaction
@@ -180,81 +186,104 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-xs"
+                  className="h-6 text-xs hover:bg-muted"
                   onClick={() => setIsEditingDetails(true)}
                 >
                   Edit
                 </Button>
               )}
             </div>
-            {isEditingDetails ? (
-              <div className="space-y-2">
-                <div>
-                  <label className="text-xs text-muted-foreground">Title</label>
-                  <Input
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    className="h-8 text-sm"
-                    placeholder="Transaction title"
-                  />
+            <div className="px-4 py-3">
+              {isEditingDetails ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Title</label>
+                    <Input
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className="h-8 text-sm"
+                      placeholder="Transaction title"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Amount</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className="h-8 text-sm"
+                        placeholder="Amount"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Date</label>
+                      <Input
+                        type="date"
+                        value={editDate}
+                        onChange={(e) => setEditDate(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={handleSaveDetails}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Save
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setIsEditingDetails(false);
+                        setEditDescription(transaction.description);
+                        setEditAmount(String(Math.abs(transaction.amount)));
+                        setEditDate(transaction.date);
+                      }}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground">Amount</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={editAmount}
-                    onChange={(e) => setEditAmount(e.target.value)}
-                    className="h-8 text-sm"
-                    placeholder="Amount"
-                  />
+              ) : (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center py-1.5 border-b border-dashed border-border/40">
+                    <span className="text-muted-foreground">Title</span>
+                    <span className="font-medium text-foreground">{transaction.description}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5 border-b border-dashed border-border/40">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-medium text-foreground">
+                      {new Intl.NumberFormat('en-CA', {
+                        style: 'currency',
+                        currency: 'CAD',
+                      }).format(Math.abs(transaction.amount))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Calendar className="h-3 w-3" />
+                      Date
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {format(new Date(transaction.date), 'MMM d, yyyy')}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleSaveDetails}
-                  >
-                    <Check className="h-3 w-3 mr-1" />
-                    Save
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setIsEditingDetails(false);
-                      setEditDescription(transaction.description);
-                      setEditAmount(String(Math.abs(transaction.amount)));
-                    }}
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
-                <div className="flex justify-between">
-                  <span>Title:</span>
-                  <span className="font-medium text-foreground">{transaction.description}</span>
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span>Amount:</span>
-                  <span className="font-medium text-foreground">
-                    {new Intl.NumberFormat('en-CA', {
-                      style: 'currency',
-                      currency: 'CAD',
-                    }).format(Math.abs(transaction.amount))}
-                  </span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Note */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
+          <div className="bg-background rounded-lg border border-border/60 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b border-border/40">
               <h4 className="text-sm font-medium flex items-center gap-2">
                 <StickyNote className="h-3.5 w-3.5 text-muted-foreground" />
                 Note
@@ -263,67 +292,69 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-xs"
+                  className="h-6 text-xs hover:bg-muted"
                   onClick={() => setIsEditingNote(true)}
                 >
                   {cleanNote ? 'Edit' : 'Add'}
                 </Button>
               )}
             </div>
-            {isEditingNote ? (
-              <div className="space-y-2">
-                <Input
-                  value={noteValue}
-                  onChange={(e) => setNoteValue(e.target.value)}
-                  className="h-8 text-sm"
-                  placeholder="Add a note about this transaction..."
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveNote();
-                    if (e.key === 'Escape') {
-                      setIsEditingNote(false);
-                      setNoteValue(cleanNote);
-                    }
-                  }}
-                  autoFocus
-                />
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleSaveNote}
-                  >
-                    <Check className="h-3 w-3 mr-1" />
-                    Save
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setIsEditingNote(false);
-                      setNoteValue(cleanNote);
+            <div className="px-4 py-3">
+              {isEditingNote ? (
+                <div className="space-y-2">
+                  <Input
+                    value={noteValue}
+                    onChange={(e) => setNoteValue(e.target.value)}
+                    className="h-8 text-sm"
+                    placeholder="Add a note about this transaction..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveNote();
+                      if (e.key === 'Escape') {
+                        setIsEditingNote(false);
+                        setNoteValue(cleanNote);
+                      }
                     }}
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={handleSaveNote}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Save
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setIsEditingNote(false);
+                        setNoteValue(cleanNote);
+                      }}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className={cn(
-                'text-sm rounded-md px-3 py-2',
-                cleanNote 
-                  ? 'bg-amber-50 border border-amber-200 text-amber-900' 
-                  : 'bg-muted/50 text-muted-foreground italic'
-              )}>
-                {cleanNote || 'No note added'}
-              </div>
-            )}
+              ) : (
+                <div className={cn(
+                  'text-sm rounded-md px-3 py-2',
+                  cleanNote
+                    ? 'bg-amber-50 border border-amber-200 text-amber-900'
+                    : 'text-muted-foreground italic'
+                )}>
+                  {cleanNote || 'No note added'}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Change Category */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
+          <div className="bg-background rounded-lg border border-border/60 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b border-border/40">
               <h4 className="text-sm font-medium flex items-center gap-2">
                 <Tags className="h-3.5 w-3.5 text-muted-foreground" />
                 Category
@@ -332,167 +363,171 @@ function ExpandedRow({ transaction, history, isLoading, categories, onSaveNote, 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-xs"
+                  className="h-6 text-xs hover:bg-muted"
                   onClick={() => setIsEditingCategory(true)}
                 >
                   Change
                 </Button>
               )}
             </div>
-            {isEditingCategory ? (
-              <div className="space-y-2">
-                {/* Major category buttons */}
-                <div className="flex items-center gap-1">
-                  {(['FIXED', 'FUN', 'FUTURE_YOU'] as CategoryType[]).map((type) => {
-                    const info = CATEGORY_TYPE_INFO[type];
-                    const isSelected = selectedType === type;
-                    return (
+            <div className="px-4 py-3">
+              {isEditingCategory ? (
+                <div className="space-y-3">
+                  {/* Major category buttons */}
+                  <div className="flex items-center gap-1.5">
+                    {(['FIXED', 'FUN', 'FUTURE_YOU'] as CategoryType[]).map((type) => {
+                      const info = CATEGORY_TYPE_INFO[type];
+                      const isSelected = selectedType === type;
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setSelectedType(type);
+                            setSelectedCategoryId(null);
+                          }}
+                          className={cn(
+                            'px-3 py-1.5 text-xs rounded-md transition-all',
+                            isSelected
+                              ? cn(info.bgColor, info.color, 'font-medium ring-1 ring-current')
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          )}
+                        >
+                          {info.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Subcategory buttons */}
+                  {selectedType && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/40">
                       <button
-                        key={type}
-                        onClick={() => {
-                          setSelectedType(type);
-                          setSelectedCategoryId(null);
-                        }}
+                        onClick={() => setSelectedCategoryId(null)}
                         className={cn(
-                          'px-2 py-1 text-xs rounded transition-all',
-                          isSelected
-                            ? cn(info.bgColor, info.color, 'font-medium ring-1 ring-current')
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          'px-2.5 py-1 text-xs rounded-md transition-all',
+                          !selectedCategoryId
+                            ? 'bg-gray-200 text-gray-700 font-medium'
+                            : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                         )}
                       >
-                        {info.label}
+                        None
                       </button>
-                    );
-                  })}
-                </div>
-                {/* Subcategory buttons */}
-                {selectedType && (
-                  <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-dashed border-muted-foreground/20">
-                    <button
-                      onClick={() => setSelectedCategoryId(null)}
-                      className={cn(
-                        'px-2 py-0.5 text-xs rounded transition-all',
-                        !selectedCategoryId
-                          ? 'bg-gray-200 text-gray-700 font-medium'
-                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                      )}
+                      {categories
+                        .filter(c => c.type === selectedType)
+                        .map((cat) => {
+                          const isSubSelected = selectedCategoryId === cat.id;
+                          const typeInfo = CATEGORY_TYPE_INFO[selectedType];
+                          return (
+                            <button
+                              key={cat.id}
+                              onClick={() => setSelectedCategoryId(cat.id)}
+                              className={cn(
+                                'px-2.5 py-1 text-xs rounded-md transition-all',
+                                isSubSelected
+                                  ? cn(typeInfo.bgColor, typeInfo.color, 'font-medium')
+                                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                              )}
+                            >
+                              {cat.name}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={async () => {
+                        if (selectedType) {
+                          await onSaveCategory(selectedType, selectedCategoryId);
+                          setIsEditingCategory(false);
+                        }
+                      }}
+                      disabled={!selectedType}
                     >
-                      None
-                    </button>
-                    {categories
-                      .filter(c => c.type === selectedType)
-                      .map((cat) => {
-                        const isSubSelected = selectedCategoryId === cat.id;
-                        const typeInfo = CATEGORY_TYPE_INFO[selectedType];
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => setSelectedCategoryId(cat.id)}
-                            className={cn(
-                              'px-2 py-0.5 text-xs rounded transition-all',
-                              isSubSelected
-                                ? cn(typeInfo.bgColor, typeInfo.color, 'font-medium')
-                                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                            )}
-                          >
-                            {cat.name}
-                          </button>
-                        );
-                      })}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 pt-1">
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={async () => {
-                      if (selectedType) {
-                        await onSaveCategory(selectedType, selectedCategoryId);
+                      <Check className="h-3 w-3 mr-1" />
+                      Save
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
                         setIsEditingCategory(false);
-                      }
-                    }}
-                    disabled={!selectedType}
-                  >
-                    <Check className="h-3 w-3 mr-1" />
-                    Save
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setIsEditingCategory(false);
-                      setSelectedType(transaction.major_category_type);
-                      setSelectedCategoryId(transaction.category_id);
-                    }}
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
+                        setSelectedType(transaction.major_category_type);
+                        setSelectedCategoryId(transaction.category_id);
+                      }}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-sm bg-muted/50 rounded-md px-3 py-2">
+              ) : (
                 <div className="flex items-center gap-2">
                   {transaction.major_category_type && (
-                    <Badge 
-                      variant="secondary" 
+                    <Badge
+                      variant="secondary"
                       className={cn('text-xs', CATEGORY_TYPE_INFO[transaction.major_category_type].bgColor, CATEGORY_TYPE_INFO[transaction.major_category_type].color)}
                     >
                       {CATEGORY_TYPE_INFO[transaction.major_category_type].label}
                     </Badge>
                   )}
                   {transaction.category && (
-                    <span className="text-muted-foreground">→</span>
+                    <span className="text-muted-foreground text-sm">→</span>
                   )}
                   {transaction.category && (
-                    <span className="font-medium">{transaction.category.name}</span>
+                    <span className="font-medium text-sm">{transaction.category.name}</span>
                   )}
                   {!transaction.category && (
-                    <span className="text-muted-foreground italic">No subcategory</span>
+                    <span className="text-muted-foreground italic text-sm">No subcategory</span>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
         {/* Right: Change History */}
-        <div>
-          <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
-            <History className="h-3.5 w-3.5 text-muted-foreground" />
-            Change History
-          </h4>
-          {isLoading ? (
-            <div className="text-sm text-muted-foreground animate-pulse">Loading history...</div>
-          ) : history.length === 0 ? (
-            <div className="text-sm text-muted-foreground italic bg-muted/50 rounded-md px-3 py-2">
-              No changes recorded
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-              {history.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="text-xs bg-muted/50 rounded-md px-3 py-2 border-l-2 border-primary/30"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-foreground">
-                      {formatFieldName(entry.field_name)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {formatDistanceToNow(new Date(entry.changed_at), { addSuffix: true })}
-                    </span>
+        <div className="bg-background rounded-lg border border-border/60 shadow-sm overflow-hidden h-fit">
+          <div className="px-4 py-2.5 bg-muted/40 border-b border-border/40">
+            <h4 className="text-sm font-medium flex items-center gap-2">
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
+              Change History
+            </h4>
+          </div>
+          <div className="px-4 py-3">
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground animate-pulse py-2">Loading history...</div>
+            ) : history.length === 0 ? (
+              <div className="text-sm text-muted-foreground italic py-2">
+                No changes recorded
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {history.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="text-xs bg-muted/30 rounded-md px-3 py-2.5 border-l-2 border-primary/40"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-medium text-foreground">
+                        {formatFieldName(entry.field_name)}
+                      </span>
+                      <span className="text-muted-foreground text-[11px]">
+                        {formatDistanceToNow(new Date(entry.changed_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="line-through">{formatHistoryValue(entry.field_name, entry.old_value)}</span>
+                      <span>→</span>
+                      <span className="text-foreground font-medium">{formatHistoryValue(entry.field_name, entry.new_value)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="line-through">{formatHistoryValue(entry.field_name, entry.old_value)}</span>
-                    <span>→</span>
-                    <span className="text-foreground font-medium">{formatHistoryValue(entry.field_name, entry.new_value)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -693,20 +728,20 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleSaveEdit = async (txId: string, description: string, amount: number) => {
+  const handleSaveEdit = async (txId: string, description: string, amount: number, date: string) => {
     const tx = transactions.find(t => t.id === txId);
     if (!tx) return;
 
     if (isDemo) {
-      setTransactions(prev => prev.map(t => 
-        t.id === txId ? { ...t, description, amount } : t
+      setTransactions(prev => prev.map(t =>
+        t.id === txId ? { ...t, description, amount, date } : t
       ));
       toast.success('Updated (demo mode)');
       return;
     }
 
     try {
-      await updateTransactionWithHistory(txId, { description, amount }, tx);
+      await updateTransactionWithHistory(txId, { description, amount, date }, tx);
       setHistoryCache(prev => {
         const next = { ...prev };
         delete next[txId];
@@ -1246,7 +1281,7 @@ export default function TransactionsPage() {
                                             isLoading={loadingHistory.has(tx.id)}
                                             categories={categories}
                                             onSaveNote={(note) => handleSaveNote(tx.id, note)}
-                                            onSaveEdit={(desc, amt) => handleSaveEdit(tx.id, desc, amt)}
+                                            onSaveEdit={(desc, amt, date) => handleSaveEdit(tx.id, desc, amt, date)}
                                             onSaveCategory={(type, catId) => handleSaveCategory(tx.id, type, catId)}
                                           />
                                         </TableCell>
@@ -1366,7 +1401,7 @@ export default function TransactionsPage() {
                                       isLoading={loadingHistory.has(tx.id)}
                                       categories={categories}
                                       onSaveNote={(note) => handleSaveNote(tx.id, note)}
-                                      onSaveEdit={(desc, amt) => handleSaveEdit(tx.id, desc, amt)}
+                                      onSaveEdit={(desc, amt, date) => handleSaveEdit(tx.id, desc, amt, date)}
                                       onSaveCategory={(type, catId) => handleSaveCategory(tx.id, type, catId)}
                                     />
                                   </TableCell>
@@ -1486,7 +1521,7 @@ export default function TransactionsPage() {
                                   isLoading={loadingHistory.has(tx.id)}
                                   categories={categories}
                                   onSaveNote={(note) => handleSaveNote(tx.id, note)}
-                                  onSaveEdit={(desc, amt) => handleSaveEdit(tx.id, desc, amt)}
+                                  onSaveEdit={(desc, amt, date) => handleSaveEdit(tx.id, desc, amt, date)}
                                   onSaveCategory={(type, catId) => handleSaveCategory(tx.id, type, catId)}
                                 />
                               </TableCell>

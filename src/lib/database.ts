@@ -180,36 +180,43 @@ export async function addTransactionHistory(
 
 // Update transaction with history tracking
 export async function updateTransactionWithHistory(
-  id: string, 
-  updates: Partial<Pick<Transaction, 'description' | 'amount' | 'notes'>>,
+  id: string,
+  updates: Partial<Pick<Transaction, 'description' | 'amount' | 'notes' | 'date'>>,
   currentTransaction: Transaction
 ): Promise<Transaction> {
   const historyPromises: Promise<TransactionHistory>[] = [];
-  
+
   // Track description changes
   if (updates.description !== undefined && updates.description !== currentTransaction.description) {
     historyPromises.push(
       addTransactionHistory(id, 'description', currentTransaction.description, updates.description)
     );
   }
-  
+
   // Track amount changes
   if (updates.amount !== undefined && updates.amount !== currentTransaction.amount) {
     historyPromises.push(
       addTransactionHistory(id, 'amount', String(currentTransaction.amount), String(updates.amount))
     );
   }
-  
+
   // Track notes changes
   if (updates.notes !== undefined && updates.notes !== currentTransaction.notes) {
     historyPromises.push(
       addTransactionHistory(id, 'notes', currentTransaction.notes, updates.notes)
     );
   }
-  
+
+  // Track date changes
+  if (updates.date !== undefined && updates.date !== currentTransaction.date) {
+    historyPromises.push(
+      addTransactionHistory(id, 'date', currentTransaction.date, updates.date)
+    );
+  }
+
   // Save history entries
   await Promise.all(historyPromises);
-  
+
   // Update the transaction
   return updateTransaction(id, updates);
 }
